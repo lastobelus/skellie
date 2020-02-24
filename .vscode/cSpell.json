@@ -1,0 +1,32 @@
+{
+    "version": "0.1",
+    "dictionaryDefinitions": [
+        {
+            "name": "rubyKeywords",
+            "path": "./dictionaries/rubyKeywords.txt"
+        }
+    ],
+    "dictionaries": [
+    ],
+    "languageSettings": [
+        {
+            "languageId": "ruby",
+            "dictionaries": [
+                "rubyKeywords"
+            ]
+        },
+        {
+            "languageId": "gemfile",
+            "dictionaries": [
+                "rubyKeywords"
+            ]
+        }, {
+            "languageId": "jsonc",
+            "dictionaries": [
+                "rubyKeywords"
+            ]
+        }
+    ],
+    "words": [
+    ]
+}

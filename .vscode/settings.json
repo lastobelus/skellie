@@ -1,0 +1,21 @@
+{
+  "editor.renderLineHighlight": "all",
+  "rufo.exe": "/Users/lasto/.rvm/gems/ruby-2.5.3/bin/rufo",
+  "ruby.lint": {
+    "reek": false,
+    "rubocop": true,
+    "ruby": true, //Runs ruby -wc
+    "fasterer": true
+  },
+  "[ruby]": {
+    "editor.suggest.filteredTypes": {
+      "keyword": false
+    }
+  },
+  "window.zoomLevel": -2,
+  "editor.formatOnSave": true,
+  "editor.formatOnSaveTimeout": 3000,
+  "files.autoSave": "onFocusChange",
+  "editor.fontSize": 14,
+  "todo.file.name": "*.todo"
+}
