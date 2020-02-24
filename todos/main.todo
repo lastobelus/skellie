@@ -5,3 +5,24 @@ Goals:
 Setup:
   ✔ add vscode settings @done(2020-02-24 10:38)
   ✔ add todos @done(2020-02-24 10:38)
+
+Proof of Concept:
+  focus on models
+  ☐ first version not idempotent, only creates new models
+  ☐ check out branch and reset to master:HEAD
+  ☐ parse models section
+  ☐ configuration for rails generate model
+  ☐ call rails generate model for each model
+  ☐ default attribute type is string
+  ☐ configurable attribute type aliases
+  ☐ rspec
+  ☐ aruba
+  
+  Version 0.01:
+  ☐ custom model generator http://tylerrockwell.github.io/creating-a-namespaced-gem-generator/
+    ☐ based on built in model generator
+  ☐ handle enums, for postgres only https://dev.to/amplifr/postgres-enums-with-rails-4ld0
+  ☐ handle default values with `:defv[]`
+  ☐ handle `in[...]` for polymorphic references
+  ☐ handle `+has_many_relationship`
+    ☐ handle through
