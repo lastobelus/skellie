@@ -1,0 +1,13 @@
+models:
+  user:
+    - name:uniq
+    - desc:t
+    - admin:bool
+    - profile:jsonb
+  company:
+    - name:uniq
+    - num_employees:i
+  widget:
+    - name:uniq
+    - category:ix
+    - inventor:ref:user
