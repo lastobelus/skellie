@@ -1,0 +1,4 @@
+models:
+  type_aliases:
+    float:
+      - flo

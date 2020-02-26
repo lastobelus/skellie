@@ -1,5 +1,7 @@
 require "skellie/version"
 require "yaml"
+require "active_support/core_ext/hash"
+require "awesome_print"
 
 module Skellie
   class Error < StandardError; end
@@ -27,13 +29,13 @@ module Skellie
 
   # Configure through hash
   def self.configure(opts = {})
-    opts.each { |k, v| @config[k.to_sym] = v if @valid_config_keys.include? k.to_sym }
-  end
-
-  # Configure through yaml file
-  def self.configure_with(path_to_yaml_file)
-    config = YAML.load(IO.read(path_to_yaml_file))
-    configure(config)
+    case opts
+    when Hash
+      opts
+    when String, Pathname
+      opts = YAML.load(IO.read(opts)).deep_symbolize_keys
+    end
+    @config = @config.deep_merge(opts)
   end
 
   def self.config

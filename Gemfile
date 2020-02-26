@@ -4,3 +4,9 @@ source "https://rubygems.org"
 gemspec
 
 gem "rake", "~> 12.0"
+
+group :development do
+  gem "pry", github: 'pry/pry'
+  # gem "pry"
+  gem "guard-rspec", require: false
+end

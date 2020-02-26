@@ -27,6 +27,7 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency "activesupport"
+  spec.add_dependency "awesome_print"
 
   spec.add_development_dependency "standard"
   spec.add_development_dependency "reek"
