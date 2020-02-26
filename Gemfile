@@ -9,4 +9,5 @@ group :development do
   gem "pry", github: 'pry/pry'
   # gem "pry"
   gem "guard-rspec", require: false
+  gem "guard-bundler", require: false
 end

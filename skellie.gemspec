@@ -29,7 +29,9 @@ Gem::Specification.new do |spec|
   spec.add_dependency "activesupport"
   spec.add_dependency "awesome_print"
 
+  # Specs & Linting
   spec.add_development_dependency "standard"
   spec.add_development_dependency "reek"
   spec.add_development_dependency "rspec"
+
 end
