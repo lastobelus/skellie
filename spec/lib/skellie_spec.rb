@@ -42,7 +42,7 @@ RSpec.context "Skellie.configure" do
 
     include_examples "default config"
 
-    it "deep merges with the defaults", focus: true do
+    it "deep merges with the defaults" do
       expect(config).to include(
         models: hash_including(
           type_aliases: hash_including(
