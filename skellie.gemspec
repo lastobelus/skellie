@@ -34,4 +34,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "reek"
   spec.add_development_dependency "rspec"
 
+  # CLI specs
+  spec.add_development_dependency "cucumber"
+  spec.add_development_dependency "aruba"
 end
