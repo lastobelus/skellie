@@ -10,6 +10,7 @@ RSpec.describe "Skellie.configure" do
       )
     end
   end
+
   context "with a hash" do
     context "that is empty" do
       subject(:config) { Skellie.configure({}) }
@@ -33,6 +34,14 @@ RSpec.describe "Skellie.configure" do
             )
           )
         )
+      end
+    end
+
+    context "with duplicate types" do
+      subject(:config) { Skellie.configure(models: {type_aliases: {decimal: %w[deci int d]}}) }
+
+      it "raises an error" do
+        expect { subject }.to raise_error(Skellie::Error, "duplicate type_aliases: int, d")
       end
     end
   end
