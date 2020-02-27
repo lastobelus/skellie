@@ -6,5 +6,12 @@
   "window.zoomLevel": -1.5,
   "files.autoSave": "onFocusChange",
   "editor.fontSize": 14,
-  "todo.file.name": "*.todo"
+  "todo.file.name": "*.todo",
+  "cucumberautocomplete.steps": [
+    "features/step_definitions/*.rb"
+  ],
+  "cucumberautocomplete.syncfeatures": "features/*.feature",
+  "cucumberautocomplete.strictGherkinCompletion": true,
+  "cucumberautocomplete.strictGherkinValidation": true,
+  "cucumberautocomplete.onTypeFormat": true
 }
