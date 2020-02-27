@@ -1,4 +1,10 @@
 GIT
+  remote: https://github.com/lastobelus/awesome_print.git
+  revision: 965fa60fdf1d63905654302ee44f191c753f8f58
+  specs:
+    awesome_print (1.8.0)
+
+GIT
   remote: https://github.com/pry/pry.git
   revision: 62c8951374aeed5a7423609a108848b0bcf81685
   specs:
@@ -11,7 +17,6 @@ PATH
   specs:
     skellie (0.1.0)
       activesupport
-      awesome_print
       thor
 
 GEM
@@ -49,7 +54,6 @@ GEM
       rspec-expectations (~> 3.4)
       thor (~> 1.0)
     ast (2.4.0)
-    awesome_print (1.8.0)
     axiom-types (0.1.1)
       descendants_tracker (~> 0.0.4)
       ice_nine (~> 0.11.0)
@@ -209,6 +213,7 @@ PLATFORMS
 DEPENDENCIES
   activerecord
   aruba
+  awesome_print!
   byebug
   combustion
   cucumber

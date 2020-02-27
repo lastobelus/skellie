@@ -8,8 +8,7 @@ gem "rake", "~> 12.0"
 group :development do
   gem "guard-rspec", require: false
   gem "guard-bundler", require: false
-end
-
-group :development, :test do
+  gem "awesome_print", github: 'lastobelus/awesome_print'
   gem "pry", github: 'pry/pry'
 end
+
