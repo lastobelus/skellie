@@ -37,4 +37,12 @@ Gem::Specification.new do |spec|
   # CLI specs
   spec.add_development_dependency "cucumber"
   spec.add_development_dependency "aruba"
+
+  # Testing against dummy rails
+  spec.add_development_dependency "combustion"
+  spec.add_development_dependency "railties"  
+  spec.add_development_dependency "activerecord"
+
+  # Utilities
+  spec.add_development_dependency "byebug"
 end
