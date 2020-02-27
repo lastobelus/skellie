@@ -1,4 +1,4 @@
-RSpec.context "Skellie.configure" do
+RSpec.describe "Skellie.configure" do
   shared_examples "default config" do
     it "has default model type_aliases for integer" do
       expect(config).to include(

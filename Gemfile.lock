@@ -12,6 +12,7 @@ PATH
     skellie (0.1.0)
       activesupport
       awesome_print
+      thor
 
 GEM
   remote: https://rubygems.org/
