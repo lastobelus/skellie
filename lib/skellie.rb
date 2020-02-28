@@ -40,7 +40,7 @@ module Skellie
   end
 
   def self.config
-    @config
+    @config ||= DEFAULTS
   end
 
   def self.validate_config

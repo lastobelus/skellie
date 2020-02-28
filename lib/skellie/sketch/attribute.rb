@@ -1,5 +1,3 @@
-require "skellie"
-
 module Skellie
   module Sketch
     class Attribute
