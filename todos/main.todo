@@ -19,7 +19,7 @@ Proof of Concept:
   ☐ default attribute type is string
   ☐ configurable attribute type aliases
   
-  Version 0.01:
+Version 0.01:
   ☐ custom model generator http://tylerrockwell.github.io/creating-a-namespaced-gem-generator/
     ☐ based on built in model generator
   ☐ handle enums, for postgres only https://dev.to/amplifr/postgres-enums-with-rails-4ld0
@@ -27,3 +27,11 @@ Proof of Concept:
   ☐ handle `in[...]` for polymorphic references
   ☐ handle `+has_many_relationship`
     ☐ handle through
+
+
+Investigate Tools:
+  ☐ stoplight studio (open-api & generic json-schema editor)
+  ☐ [spectral](https://stoplight.io/open-source/spectral/)
+    ☐ [vscode extension](https://github.com/tillig/vscode-spectral)
+  ☐ [json_schemer](https://github.com/davishmcclurg/json_schemer) ruby json-schema validator, up to draft 7
+  ☐ [quicktype.io](https://app.quicktype.io) generate code from various json formats, incl. json schema. The ruby generation is based on Dry::Struct & Dry::Types. [github repo](https://github.com/quicktype/quicktype). Has a CLI version

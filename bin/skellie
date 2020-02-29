@@ -1,3 +1,5 @@
 #!/usr/bin/env ruby
-require 'skellie/cli'
+require "bundler/setup"
+require "skellie/cli"
+
 Skellie::CLI.start

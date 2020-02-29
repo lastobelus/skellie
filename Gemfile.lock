@@ -17,6 +17,7 @@ PATH
   specs:
     skellie (0.1.0)
       activesupport
+      attr_extras
       thor
 
 GEM
@@ -54,6 +55,7 @@ GEM
       rspec-expectations (~> 3.4)
       thor (~> 1.0)
     ast (2.4.0)
+    attr_extras (6.2.3)
     axiom-types (0.1.1)
       descendants_tracker (~> 0.0.4)
       ice_nine (~> 0.11.0)

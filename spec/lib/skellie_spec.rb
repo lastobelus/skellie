@@ -4,7 +4,7 @@ RSpec.describe "Skellie.configure" do
       expect(config).to include(
         models: hash_including(
           type_aliases: hash_including(
-            integer: %w[i int]
+            integer: %i[i int]
           )
         )
       )
@@ -22,7 +22,7 @@ RSpec.describe "Skellie.configure" do
     end
 
     context "with nested values" do
-      subject(:config) { Skellie.configure(models: {type_aliases: {decimal: %w[deci]}}) }
+      subject(:config) { Skellie.configure(models: {type_aliases: {decimal: %i[deci]}}) }
 
       include_examples "default config"
 
@@ -30,7 +30,7 @@ RSpec.describe "Skellie.configure" do
         expect(config).to include(
           models: hash_including(
             type_aliases: hash_including(
-              decimal: %w[deci]
+              decimal: %i[deci]
             )
           )
         )
@@ -38,7 +38,7 @@ RSpec.describe "Skellie.configure" do
     end
 
     context "with duplicate types" do
-      subject(:config) { Skellie.configure(models: {type_aliases: {decimal: %w[deci int d]}}) }
+      subject(:config) { Skellie.configure(models: {type_aliases: {decimal: %i[deci int d]}}) }
 
       it "raises an error" do
         expect { subject }.to raise_error(Skellie::Error, "duplicate type_aliases: int, d")
@@ -55,7 +55,7 @@ RSpec.describe "Skellie.configure" do
       expect(config).to include(
         models: hash_including(
           type_aliases: hash_including(
-            float: %w[flo]
+            float: %i[flo]
           )
         )
       )
