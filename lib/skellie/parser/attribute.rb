@@ -61,7 +61,19 @@ module Skellie
         end
 
         type_and_modifiers = s.rest
-        modifiers = parse_type(type_and_modifiers, output)
+
+        type, modifiers = parse_type(type_and_modifiers)
+
+        puts "output.accepts_type?: #{output.accepts_type?.inspect}"
+        if output.accepts_type?
+          if type.blank?
+            output.type = :string if output.accepts_default_type?
+          else
+            output.type = type
+          end
+        elsif type
+          raise ParseError, "can't apply type to `#{output.kind}` in `#{input.inspect}`"
+        end
 
         unless modifiers.blank?
           case output.kind
@@ -100,27 +112,34 @@ module Skellie
         end
       end
 
-      def parse_type(type_and_modifiers, output)
+      def parse_type(type_and_modifiers)
         puts "parse_type type_and_modifiers: #{type_and_modifiers.inspect}"
         case type_and_modifiers
         when Empty
-          output.type = case output.kind
-          when :add_column
-            :string
-          end
-          nil
+          [nil, nil]
         when String
           parts = type_and_modifiers.split(":")
-          output.type = normalize_type(parts.shift.to_sym)
-
-          if output.kind == :rename_column
-            if output.new_name.blank?
-              output.new_name = parts.shift
-            elsif type_and_modifiers&.length
-              raise ParseError, "unknown modifier `#{s.rest}` for rename in `#{type_and_modifiers.inspect}`"
+          type = normalize_type(parts.first)
+          if type.nil?
+            if normalize_type_modifier(parts.first)
+              [nil, parts]
+            else
+              raise ParseError, "unknown type #{type} in `#{input}`"
             end
+          else
+            parts.shift
+            [type, parts]
           end
-          parts
+
+          # output.type
+          # puts "  output.type: #{output.type.inspect}"
+          # if output.kind == :rename_column
+          #   if output.new_name.blank?
+          #     output.new_name = parts.shift
+          #   elsif type_and_modifiers&.length
+          #     raise ParseError, "unknown modifier `#{s.rest}` for rename in `#{type_and_modifiers.inspect}`"
+          #   end
+          # end
         else
           raise ParseError, "unexpected type_and_modifiers: #{type_and_modifiers.inspect}"
         end
@@ -149,34 +168,24 @@ module Skellie
       end
 
       def parse_type_modifiers_array(modifiers, output)
+        puts "parse_type_modifiers_array modifiers: #{modifiers.inspect}"
         while modifiers && modifiers.length > 0
           modifier = modifiers.shift
-          case normalize_type_modifier(modifier, output)
+          case normalize_type_modifier(modifier)
           when :required
             output.required = true
           when :default_value
-            raise ParseError, "default value specified but none given in `#{input.inspect}`"
+            raise ParseError, "default value specified but none given in `#{input.inspect}`" if modifiers.empty?
             output.default_value = modifiers.shift
           when :poly
             if in_match = modifiers.first.match(/^in\[(?<poly_in>\w+\])/)
               output.polymorphic_restriction = m[:poly_in].split(/ *, */).map(&:strip)
               modifiers.shift
             end
+          when nil
+            raise ParseError, "unknown modifier #{modifier} in `#{input}`"
           end
         end
-      end
-
-      def scan_type(s)
-        return :string if s.eos?
-        s.scan(
-          %r{
-            :
-            (?<type>\w+)
-            (?<type_modifier>\{\w*\})?
-          }x
-        )
-        return :string unless s[:type]
-        normalize_type(s[:type])
       end
 
       def normalize_type(type)
@@ -185,9 +194,8 @@ module Skellie
         type_alias = Skellie.model_attribute_type_aliases.detect { |column_type, aliases|
           aliases&.include?(type)
         }
-        raise UnknownType, "unknown type #{type} in `#{input}`" if type_alias.nil?
 
-        type_alias.first.to_sym
+        type_alias&.first&.to_sym
       end
 
       # def validate_modifier_keys(modifier)
@@ -202,15 +210,14 @@ module Skellie
       #   end
       # end
 
-      def normalize_type_modifier(modifier, output)
+      def normalize_type_modifier(modifier)
         modifier = modifier.to_sym
         return modifier if Skellie.model_type_modifier_aliases.key?(modifier)
         modifier_alias = Skellie.model_type_modifier_aliases.detect { |column_type, aliases|
           aliases&.include?(modifier)
         }
-        raise ParseError, "unknown modifier #{modifier} in `#{input}`" if modifier_alias.nil?
 
-        modifier_alias.first.to_sym
+        modifier_alias&.first&.to_sym
       end
     end
   end

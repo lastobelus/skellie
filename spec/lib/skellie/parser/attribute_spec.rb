@@ -102,6 +102,24 @@ RSpec.describe Skellie::Parser::Attribute do
                              new_name: "info",}
       end
     end
+
+    context "default value" do
+      it "parses default value" do
+        parse! "category:s:defv:howdy", {name: "category",
+                                         kind: :add_column,
+                                         type: :string,
+                                         default_value: "howdy",}
+        parse! "category:s:req:defv:howdy", {name: "category",
+                                             kind: :add_column,
+                                             type: :string,
+                                             default_value: "howdy",
+                                             required: true,}
+        parse! "category:defv:howdy", {name: "category",
+                                       kind: :add_column,
+                                       type: :string,
+                                       default_value: "howdy",}
+      end
+    end
   end
 
   context "syntax 2 (attribute name is key, modifers are in a coded string" do
@@ -129,6 +147,20 @@ RSpec.describe Skellie::Parser::Attribute do
         parse! "desc>: info", {name: "desc",
                                kind: :rename_column,
                                new_name: "info",}
+      end
+    end
+
+    context "default value" do
+      it "parses default value" do
+        parse! "category: s:defv:howdy", {name: "category",
+                                          kind: :add_column,
+                                          type: :string,
+                                          default_value: "howdy",}
+        parse! "category: s:req:defv:howdy", {name: "category",
+                                              kind: :add_column,
+                                              type: :string,
+                                              default_value: "howdy",
+                                              required: true,}
       end
     end
   end
