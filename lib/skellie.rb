@@ -25,9 +25,12 @@ module Skellie
       type_modifier_aliases: {
         default_value: %i[defv],
         default_method: %i[defm],
+        required: %i[req],
+        poly: %i[],
       },
       assoc_modifier_aliases: {
         through: %i[thru],
+        as: [],
       },
     },
   }
@@ -82,14 +85,26 @@ module Skellie
   end
 
   def self.model_attribute_type_aliases
-    config[:models][:type_aliases].to_a.flatten.map(&:to_sym)
+    config[:models][:type_aliases]
+  end
+
+  def self.all_model_attribute_type_aliases
+    model_attribute_type_aliases.to_a.flatten.map(&:to_sym)
   end
 
   def self.model_type_modifier_aliases
-    config[:models][:type_modifier_aliases].to_a.flatten.map(&:to_sym)
+    config[:models][:type_modifier_aliases]
+  end
+
+  def self.all_model_type_modifier_aliases
+    model_type_modifier_aliases.to_a.flatten.map(&:to_sym)
   end
 
   def self.model_association_modifier_aliases
-    config[:models][:association_modifier_aliases].to_a.flatten.map(&:to_sym)
+    config[:models][:association_modifier_aliases]
+  end
+
+  def self.all_model_association_modifier_aliases
+    model_association_modifier_aliases.to_a.flatten.map(&:to_sym)
   end
 end

@@ -27,11 +27,13 @@ Version 0.01:
   ☐ handle `in[...]` for polymorphic references
   ☐ handle `+has_many_relationship`
     ☐ handle through
-
-
+  specs:
+    ☐ refactor to use dynamic spec, so that output is more meaningful https://github.com/rspec/rspec-core/issues/2344#issuecomment-258718905 or https://github.com/rspec/rspec-core/issues/2344#issuecomment-259926906 -- second one probably better for my purpose
 Investigate Tools:
   ☐ stoplight studio (open-api & generic json-schema editor)
   ☐ [spectral](https://stoplight.io/open-source/spectral/)
     ☐ [vscode extension](https://github.com/tillig/vscode-spectral)
   ☐ [json_schemer](https://github.com/davishmcclurg/json_schemer) ruby json-schema validator, up to draft 7
   ☐ [quicktype.io](https://app.quicktype.io) generate code from various json formats, incl. json schema. The ruby generation is based on Dry::Struct & Dry::Types. [github repo](https://github.com/quicktype/quicktype). Has a CLI version
+
+
