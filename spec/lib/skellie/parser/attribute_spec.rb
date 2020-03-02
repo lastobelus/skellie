@@ -56,21 +56,21 @@ RSpec.describe Skellie::Parser::Attribute do
       parse! "username", {name: "username",
                           kind: :add_column,
                           type: :string,}
-      parse! "bad/username", /can't give column a namespace/
+      parse! "bad/username", /can't use a namespace for `add_column`/
     end
 
     it "parses delete attribute" do
       parse! "~username", {name: "username",
                            kind: :remove_column,}
-      parse! "~bad/username", /can't give column a namespace/
+      parse! "~bad/username", /can't use a namespace for `remove_column`/
     end
 
     it "parses plain associations" do
       parse! "+users", {name: "users",
-                        kind: :association,}
+                        kind: :add_association,}
       parse! "+other/users", {name: "users",
                               namespace: "other",
-                              kind: :association,}
+                              kind: :add_association,}
     end
 
     it "parses attributes with types" do

@@ -6,7 +6,7 @@ module Skellie
     class Attribute
       class Empty
         def self.===(object)
-          !object || ("" == object)
+          !object || object.blank? || object.empty?
         end
       end
 
@@ -44,17 +44,30 @@ module Skellie
       end
 
       def parse_from_string_parts(output, op_and_name, rest = nil)
-        puts "parse_from_string_parts opt_and_name: #{op_and_name.inspect} rest: #{rest.inspect}"
+        puts "parse_from_string_parts op_and_name: #{op_and_name.inspect} rest: #{rest.inspect}"
         s = StringScanner.new(op_and_name)
-        parse_op_and_name(s, output)
-        type_and_modifiers = rest || s.rest
+        ops, output.name, output.namespace = parse_ops_and_name(s)
+        output.kind = normalize_ops(ops)
+        s = s.eos? ? StringScanner.new(rest || "") : s
+
+        if output.rename?
+          output.new_namespace, output.new_name = scan_namespace_and_name(s)
+        end
+
+        puts "output.namespace: #{output.namespace.inspect}"
+        puts "output.kind: #{output.kind.inspect}"
+        if output.namespace && !output.namespace_allowed?
+          raise ParseError, "can't use a namespace for `#{output.kind}` in `#{input.inspect}`"
+        end
+
+        type_and_modifiers = s.rest
         modifiers = parse_type(type_and_modifiers, output)
 
         unless modifiers.blank?
           case output.kind
           when :add_column
             parse_type_modifiers_array(modifiers, output)
-          when :association
+          when :add_association
           else
             raise ParseError, "don't know what to do with `#{modifiers}` for `#{output.kind}` in #{input.inspect}"
           end
@@ -62,9 +75,29 @@ module Skellie
         end
       end
 
-      def parse_op_and_name(s, output)
-        output.kind = scan_op(s)
-        scan_namespace_and_name(s, output)
+      def parse_ops_and_name(s)
+        ops = scan_ops(s)
+        namespace, name = scan_namespace_and_name(s)
+        ops += scan_ops(s)
+        [ops, name, namespace]
+      end
+
+      def normalize_ops(ops)
+        puts "ops: #{ops.inspect}"
+        case ops.sort.uniq
+        when %w[+]
+          :add_association
+        when %w[~]
+          :remove_column
+        when %w[+~]
+          :remove_association
+        when %w[>]
+          :rename_column
+        when %w[+>]
+          :rename_association
+        when Empty
+          :add_column
+        end
       end
 
       def parse_type(type_and_modifiers, output)
@@ -93,47 +126,26 @@ module Skellie
         end
       end
 
-      def scan_op(s)
-        case s.scan(/[+>~]?/)
-        when "+"
-          :association
-        when "~"
-          :remove_column
-        when ">"
-          :rename_column
-        else
-          :add_column
+      def scan_ops(s)
+        ops = []
+        until (op = s.scan(/[+>~]?/)).blank?
+          ops << op
         end
+        ops
       end
 
-      def scan_namespace_and_name(s, output)
-        puts "scan_namespace_and_name s: #{s.inspect} output: #{output.inspect}"
+      def scan_namespace_and_name(s)
+        puts "scan_namespace_and_name s: #{s.inspect}"
         s.scan(
           %r{
             (?<namespace>\w+(?=/))?
             /?
             (?<name>\w+)
-            (?:>(?<new_name>\w+))?
             :?
           }x
         )
-        puts "s: #{s.inspect}"
-        output.namespace = s[:namespace]
-        if output.namespace && output.kind != :association
-          raise ParseError, "can't give column a namespace `#{output.namespace}` in `#{input.inspect}`"
-        end
-        output.name = s[:name]
-        if s[:new_name]
-          case output.kind
-          when :add_column
-            output.kind = :rename_column
-          when :association
-            output.kind = :rename_association
-          when :remove_column
-            raise ParseError, "specified both remove_column and rename_column in `#{input.inspect}`"
-          end
-          output.new_name = s[:new_name]
-        end
+        ap s
+        [s[:namespace], s[:name]]
       end
 
       def parse_type_modifiers_array(modifiers, output)
