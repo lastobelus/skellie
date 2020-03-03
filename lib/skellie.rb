@@ -21,12 +21,17 @@ module Skellie
         time: %i[ti],
         datetime: %i[dt],
         references: %i[ref refs],
+        jsonb: [],
+        json: [],
       },
       type_modifier_aliases: {
         default_value: %i[defv],
         default_method: %i[defm],
         required: %i[req],
         poly: %i[],
+        hash: [],
+        array: [],
+        through: %i[thru],
       },
       assoc_modifier_aliases: {
         through: %i[thru],

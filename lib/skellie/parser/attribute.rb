@@ -10,8 +10,6 @@ module Skellie
         end
       end
 
-      VALID_TYPE_MODIFIER_KEYS = %i[thru class as poly]
-      VALID_ASSOCIATION_MODIFIER_KEYS = %i[thru class as poly]
       class UnknownType < StandardError; end
       class ParseError < StandardError; end
 
@@ -54,8 +52,10 @@ module Skellie
           output.new_namespace, output.new_name = scan_namespace_and_name(s)
         end
 
+        puts "output.name: #{output.name.inspect}"
         puts "output.namespace: #{output.namespace.inspect}"
         puts "output.kind: #{output.kind.inspect}"
+        puts "s.rest: #{s.rest.inspect}"
         if output.namespace && !output.namespace_allowed?
           raise ParseError, "can't use a namespace for `#{output.kind}` in `#{input.inspect}`"
         end
@@ -75,11 +75,16 @@ module Skellie
           raise ParseError, "can't apply type to `#{output.kind}` in `#{input.inspect}`"
         end
 
-        unless modifiers.blank?
+        puts "modifiers.blank?: #{modifiers.blank?.inspect}"
+        if modifiers.blank?
+          puts "output.reference?: #{output.reference?.inspect}"
+          if output.reference?
+            output.to = output.name
+          end
+        else
           case output.kind
-          when :add_column
+          when :add_column, :add_association
             parse_type_modifiers_array(modifiers, output)
-          when :add_association
           else
             raise ParseError, "don't know what to do with `#{modifiers}` for `#{output.kind}` in #{input.inspect}"
           end
@@ -169,22 +174,45 @@ module Skellie
 
       def parse_type_modifiers_array(modifiers, output)
         puts "parse_type_modifiers_array modifiers: #{modifiers.inspect}"
+        pending_ref = output.reference?
+        puts "pending_ref: #{pending_ref.inspect}"
         while modifiers && modifiers.length > 0
           modifier = modifiers.shift
-          case normalize_type_modifier(modifier)
+          normalized_modifier = normalize_type_modifier(modifier)
+          case normalized_modifier
           when :required
             output.required = true
           when :default_value
             raise ParseError, "default value specified but none given in `#{input.inspect}`" if modifiers.empty?
             output.default_value = modifiers.shift
+          when :hash, :array
+            if %i[json jsonb].include? output.type
+              output.default_value = normalized_modifier
+            else
+              raise ParseError, "can't use default value `#{normalized_modifier}` for type `#{output.type}` in `#{input}`"
+            end
           when :poly
             if in_match = modifiers.first.match(/^in\[(?<poly_in>\w+\])/)
               output.polymorphic_restriction = m[:poly_in].split(/ *, */).map(&:strip)
               modifiers.shift
             end
+          when :through
+            if output.accepts_through?
+              if modifiers.empty?
+                raise ParseError, "through specified without name in `#{input}`"
+              end
+              output.through = modifiers.shift
+            else
+              raise ParseError, "can't apply through to `#{output.kind}` in `#{input}`"
+            end
           when nil
-            raise ParseError, "unknown modifier #{modifier} in `#{input}`"
+            if pending_ref
+              output.to = modifier
+            else
+              raise ParseError, "unknown modifier #{modifier} in `#{input}`"
+            end
           end
+          pending_ref = false
         end
       end
 

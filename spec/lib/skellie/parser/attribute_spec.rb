@@ -95,6 +95,22 @@ RSpec.describe Skellie::Parser::Attribute do
       end
     end
 
+    context "associations" do
+      it "parses 'through' associations" do
+        parse! "+inventors:thru:variants", {name: "inventors",
+                                            kind: :add_association,
+                                            through: "variants",}
+      end
+
+      it "raises when through specified on a non association" do
+        parse! "inventors:thru:variants", /can't apply through/
+      end
+
+      it "raises when through specified without an entity" do
+        parse! "+inventors:thru", /through specified without name/
+      end
+    end
+
     context "renaming attributes" do
       it "parses old and new name" do
         parse! "desc>info", {name: "desc",
@@ -109,15 +125,51 @@ RSpec.describe Skellie::Parser::Attribute do
                                          kind: :add_column,
                                          type: :string,
                                          default_value: "howdy",}
+        parse! "category:defv:howdy", {name: "category",
+                                       kind: :add_column,
+                                       type: :string,
+                                       default_value: "howdy",}
+      end
+      it "parses default value with required" do
         parse! "category:s:req:defv:howdy", {name: "category",
                                              kind: :add_column,
                                              type: :string,
                                              default_value: "howdy",
                                              required: true,}
-        parse! "category:defv:howdy", {name: "category",
+      end
+
+      it "parses array and hash defaults for jsonb columns" do
+        parse! "profile:jsonb:defv:{}", {name: "profile",
+                                         kind: :add_column,
+                                         type: :jsonb,
+                                         default_value: {},}
+        parse! "profile:jsonb:hash", {name: "profile",
+                                      kind: :add_column,
+                                      type: :jsonb,
+                                      default_value: {},}
+        parse! "profile:jsonb:defv:[]", {name: "profile",
+                                         kind: :add_column,
+                                         type: :jsonb,
+                                         default_value: [],}
+        parse! "profile:jsonb:array", {name: "profile",
                                        kind: :add_column,
-                                       type: :string,
-                                       default_value: "howdy",}
+                                       type: :jsonb,
+                                       default_value: [],}
+      end
+    end
+
+    context "references" do
+      it "parses references and infers class name" do
+        parse! "material:ref", {name: "material",
+                                kind: :add_column,
+                                type: :references,
+                                to: "material",}
+      end
+      it "parses references and infers class name" do
+        parse! "main_material:ref:material", {name: "main_material",
+                                              kind: :add_column,
+                                              type: :references,
+                                              to: "material",}
       end
     end
   end
@@ -142,6 +194,22 @@ RSpec.describe Skellie::Parser::Attribute do
       end
     end
 
+    context "associations" do
+      it "parses 'through' associations" do
+        parse! "+inventors: thru:variants", {name: "inventors",
+                                             kind: :add_association,
+                                             through: "variants",}
+      end
+
+      it "raises when through specified on a non association" do
+        parse! "inventors: thru:variants", /can't apply through/
+      end
+
+      it "raises when through specified without an entity" do
+        parse! "+inventors: thru", /through specified without name/
+      end
+    end
+
     context "renaming attributes" do
       it "parses old and new name" do
         parse! "desc>: info", {name: "desc",
@@ -156,11 +224,51 @@ RSpec.describe Skellie::Parser::Attribute do
                                           kind: :add_column,
                                           type: :string,
                                           default_value: "howdy",}
+        parse! "category: defv:howdy", {name: "category",
+                                        kind: :add_column,
+                                        type: :string,
+                                        default_value: "howdy",}
+      end
+      it "parses default value with required" do
         parse! "category: s:req:defv:howdy", {name: "category",
                                               kind: :add_column,
                                               type: :string,
                                               default_value: "howdy",
                                               required: true,}
+      end
+
+      it "parses array and hash defaults for jsonb columns" do
+        parse! "profile: jsonb:defv:{}", {name: "profile",
+                                          kind: :add_column,
+                                          type: :jsonb,
+                                          default_value: {},}
+        parse! "profile: jsonb:hash", {name: "profile",
+                                       kind: :add_column,
+                                       type: :jsonb,
+                                       default_value: {},}
+        parse! "profile: jsonb:defv:[]", {name: "profile",
+                                          kind: :add_column,
+                                          type: :jsonb,
+                                          default_value: [],}
+        parse! "profile: jsonb:array", {name: "profile",
+                                        kind: :add_column,
+                                        type: :jsonb,
+                                        default_value: [],}
+      end
+    end
+
+    context "references" do
+      it "parses references and infers class name" do
+        parse! "material: ref", {name: "material",
+                                 kind: :add_column,
+                                 type: :references,
+                                 to: "material",}
+      end
+      it "parses references and infers class name" do
+        parse! "main_material: ref:material", {name: "main_material",
+                                               kind: :add_column,
+                                               type: :references,
+                                               to: "material",}
       end
     end
   end
