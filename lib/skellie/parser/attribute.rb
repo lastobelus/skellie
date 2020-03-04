@@ -45,7 +45,8 @@ module Skellie
         puts "parse_from_string_parts op_and_name: #{op_and_name.inspect} rest: #{rest.inspect}"
         s = StringScanner.new(op_and_name)
         ops, output.name, output.namespace = parse_ops_and_name(s)
-        output.kind = normalize_ops(ops)
+        output.kind, output.type = normalize_ops(ops)
+        puts "after normalize_ops output.type: #{output.type.inspect}"
         s = s.eos? ? StringScanner.new(rest || "") : s
 
         if output.rename?
@@ -62,14 +63,23 @@ module Skellie
 
         type_and_modifiers = s.rest
 
-        type, modifiers = parse_type(type_and_modifiers)
+        type, normalized_type, modifiers = parse_type(type_and_modifiers)
 
+        puts "type: #{type.inspect} normalized_type: #{normalized_type.inspect} modifiers: #{modifiers.inspect}"
         puts "output.accepts_type?: #{output.accepts_type?.inspect}"
         if output.accepts_type?
           if type.blank?
-            output.type = :string if output.accepts_default_type?
+            output.type ||= :string if output.accepts_default_type?
           else
-            output.type = type
+            if output.type && output_type != normalized_type
+              raise "ambiguous type `(#{output.type}, #{normalized_type})` in `#{input.inspect}`"
+            end
+            output.type = normalized_type
+            if normalized_type == :jsonb
+              if ["[]", "{}"].include? type
+                output.default_value = type
+              end
+            end
           end
         elsif type
           raise ParseError, "can't apply type to `#{output.kind}` in `#{input.inspect}`"
@@ -93,9 +103,9 @@ module Skellie
       end
 
       def parse_ops_and_name(s)
-        ops = scan_ops(s)
+        ops = scan_pre_ops(s)
         namespace, name = scan_namespace_and_name(s)
-        ops += scan_ops(s)
+        ops += scan_post_ops(s)
         [ops, name, namespace]
       end
 
@@ -104,7 +114,7 @@ module Skellie
         case ops.sort.uniq
         when %w[+]
           :add_association
-        when %w[~]
+        when %w[~], %w[~?]
           :remove_column
         when %w[+~]
           :remove_association
@@ -112,8 +122,12 @@ module Skellie
           :rename_column
         when %w[+>]
           :rename_association
+        when %w[?]
+          [:add_column, :boolean]
         when Empty
           :add_column
+        else
+          raise ParseError, "don't know what to do with combination of `#{ops.inspect}` in `#{input.inspect}`"
         end
       end
 
@@ -121,19 +135,18 @@ module Skellie
         puts "parse_type type_and_modifiers: #{type_and_modifiers.inspect}"
         case type_and_modifiers
         when Empty
-          [nil, nil]
+          [nil, nil, nil]
         when String
           parts = type_and_modifiers.split(":")
-          type = normalize_type(parts.first)
-          if type.nil?
+          normalized_type = normalize_type(parts.first)
+          if normalized_type.nil?
             if normalize_type_modifier(parts.first)
-              [nil, parts]
+              [nil, nil, parts]
             else
               raise ParseError, "unknown type #{type} in `#{input}`"
             end
           else
-            parts.shift
-            [type, parts]
+            [parts.shift, normalized_type, parts]
           end
 
           # output.type
@@ -150,9 +163,17 @@ module Skellie
         end
       end
 
-      def scan_ops(s)
+      def scan_pre_ops(s)
         ops = []
-        until (op = s.scan(/[+>~]?/)).blank?
+        until (op = s.scan(/[+~]?/)).blank?
+          ops << op
+        end
+        ops
+      end
+
+      def scan_post_ops(s)
+        ops = []
+        until (op = s.scan(/[?>]?/)).blank?
           ops << op
         end
         ops
@@ -201,7 +222,7 @@ module Skellie
               if modifiers.empty?
                 raise ParseError, "through specified without name in `#{input}`"
               end
-              output.through = modifiers.shift
+              parse_through(modifiers.shift, output)
             else
               raise ParseError, "can't apply through to `#{output.kind}` in `#{input}`"
             end
@@ -214,6 +235,22 @@ module Skellie
           end
           pending_ref = false
         end
+      end
+
+      def parse_through(through, output)
+        m = through.match(
+          %r{
+            (?<through>\w+)
+            (?:\[\s*
+              (?<source>[^\s,\]]+)?
+              (?:\s*,\s*(?<source_type>[^\s,\]]+))?
+              \s*\]
+            )?
+          }x
+        )
+        output.through = m[:through]
+        output.source = m[:source]
+        output.source_type = m[:source_type]
       end
 
       def normalize_type(type)

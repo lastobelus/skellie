@@ -3,7 +3,13 @@ require "attr_extras"
 module Skellie
   module Sketch
     class Attribute
-      aattr_initialize [:name, :namespace, :kind, :type, :required, :new_name, :new_namespace, :polymorphic_restriction, :default_value, :to, :through]
+      aattr_initialize [
+        :name, :namespace,
+        :kind, :type, :required, :optional,
+        :new_name, :new_namespace,
+        :polymorphic_restriction, :default_value, :to,
+        :through, :source, :source_type,
+      ]
       attr_query :required?
 
       def rename?

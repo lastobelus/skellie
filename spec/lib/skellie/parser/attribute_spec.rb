@@ -65,21 +65,20 @@ RSpec.describe Skellie::Parser::Attribute do
       parse! "~bad/username", /can't use a namespace for `remove_column`/
     end
 
-    it "parses plain associations" do
-      parse! "+users", {name: "users",
-                        kind: :add_association,}
-      parse! "+other/users", {name: "users",
-                              namespace: "other",
-                              kind: :add_association,}
-    end
-
-    it "parses attributes with types" do
-      parse! "num_stuff:integer", {name: "num_stuff",
-                                   kind: :add_column,
-                                   type: :integer,}
-      parse! "num_stuff:i", {name: "num_stuff",
-                             kind: :add_column,
-                             type: :integer,}
+    context "types" do
+      it "parses attributes with types" do
+        parse! "num_stuff:integer", {name: "num_stuff",
+                                     kind: :add_column,
+                                     type: :integer,}
+        parse! "num_stuff:i", {name: "num_stuff",
+                               kind: :add_column,
+                               type: :integer,}
+      end
+      it "parses trailing ? as boolean type" do
+        parse! "active?", {name: "active",
+                           kind: :add_column,
+                           type: :boolean,}
+      end
     end
 
     context "attributes with modifiers" do
@@ -95,19 +94,49 @@ RSpec.describe Skellie::Parser::Attribute do
       end
     end
 
-    context "associations" do
-      it "parses 'through' associations" do
-        parse! "+inventors:thru:variants", {name: "inventors",
-                                            kind: :add_association,
-                                            through: "variants",}
+    context "has_many associations" do
+      it "parses plain has_many associations" do
+        parse! "+users", {name: "users",
+                          kind: :add_association,}
+        parse! "+other/users", {name: "users",
+                                namespace: "other",
+                                kind: :add_association,}
       end
+      context "through" do
+        it "parses 'through' has_many associations" do
+          parse! "+inventors:thru:variants", {name: "inventors",
+                                              kind: :add_association,
+                                              through: "variants",}
+        end
 
-      it "raises when through specified on a non association" do
-        parse! "inventors:thru:variants", /can't apply through/
-      end
+        it "raises when through specified on a non association" do
+          parse! "inventors:thru:variants", /can't apply through/
+        end
 
-      it "raises when through specified without an entity" do
-        parse! "+inventors:thru", /through specified without name/
+        it "raises when through specified without an entity" do
+          parse! "+inventors:thru", /through specified without name/
+        end
+
+        it "handles source" do
+          parse! "+other_suppliers:thru:other_materials[supplier]",
+            {
+              name: "other_suppliers",
+              kind: :add_association,
+              through: "other_materials",
+              source: "supplier",
+            }
+        end
+
+        it "handles source_type" do
+          parse! "+crafters:thru:productions[producer,artisan]",
+            {
+              name: "crafters",
+              kind: :add_association,
+              through: "productions",
+              source: "producer",
+              source_type: "artisan",
+            }
+        end
       end
     end
 
@@ -158,14 +187,14 @@ RSpec.describe Skellie::Parser::Attribute do
       end
     end
 
-    context "references" do
-      it "parses references and infers class name" do
+    context "references (belongs_to associations)" do
+      it "parses belongs_to associations and infers class name" do
         parse! "material:ref", {name: "material",
                                 kind: :add_column,
                                 type: :references,
                                 to: "material",}
       end
-      it "parses references and infers class name" do
+      it "parses references with specified class name" do
         parse! "main_material:ref:material", {name: "main_material",
                                               kind: :add_column,
                                               type: :references,
