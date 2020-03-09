@@ -1,9 +1,8 @@
-require 'thor'
-require 'yaml'
+require "thor"
+require "yaml"
 require "active_support/core_ext/hash"
 require "awesome_print"
-require 'skellie/sketch'
-
+require "skellie/sketch/app"
 
 module Skellie
   class CLI < Thor
@@ -13,14 +12,12 @@ module Skellie
     desc "generate", "generate rails files from a skellie.yml file"
     method_option :file, aliases: "-f", default: "skellie.yml"
     def generate
-      sketch = Skellie::Sketch.new(file: options[:file])
+      sketch = Skellie::Sketch::App.new(file: options[:file])
       puts "generating..."
-      ap skellie
+      ap sketch
     end
     default_task :generate
 
     private
-
-
   end
 end
