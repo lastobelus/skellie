@@ -129,6 +129,7 @@ GEM
     loofah (2.4.0)
       crass (~> 1.0.2)
       nokogiri (>= 1.5.9)
+    lp (0.2.1)
     lumberjack (1.2.4)
     method_source (0.9.2)
     mini_portile2 (2.4.0)
@@ -221,6 +222,7 @@ DEPENDENCIES
   cucumber
   guard-bundler
   guard-rspec
+  lp
   pry!
   railties
   rake (~> 12.0)

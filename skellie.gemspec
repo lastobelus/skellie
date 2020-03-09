@@ -28,7 +28,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency "activesupport"
   spec.add_dependency "attr_extras"
-  
+
   # CLI
   spec.add_dependency "thor"
 
@@ -48,4 +48,5 @@ Gem::Specification.new do |spec|
 
   # Utilities
   spec.add_development_dependency "byebug"
+  spec.add_development_dependency "lp"
 end
