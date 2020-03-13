@@ -1,72 +1,58 @@
 require "skellie/sketch/attribute"
+require "skellie/parser/parse_error"
 require "active_support/core_ext/string/inflections"
+require "skellie/parser/parse_errors/attributes"
 
 module Skellie
   module Parser
+    # Parses attributes in a model sketch.
+    # takes a fragment of parsed yaml corresponding to an attribute.
+    # Understands two syntax form:
+    #   String (whole attribute specified as : delimited string with name first)
+    #   single-value Hash (key is the attribute name, value is : delimited modifers)
     class Attribute
+      include Skellie::Parser::ParseErrors::Attributes
+      # class representing an empty value, for use in case statements
       class Empty
         def self.===(object)
           !object || object.blank? || object.empty?
         end
       end
 
-      class UnknownType < StandardError; end
-      class ParseError < StandardError; end
-
-      attr_accessor :input
-      def initialize(input)
-        @input = input
-      end
+      pattr_initialize :input, [:debug]
 
       def parse
         output = Skellie::Sketch::Attribute.new
-        # puts "output: #{output.inspect}"
+        # dbg "output: #{output.inspect}"
         case input
         when String
-          # puts "input is a string"
+          # dbg "input is a string"
           parse_from_string_parts(output, input)
         when Hash
-          puts "parsing from hash"
-          if input.length == 1
-            op_and_name = input.first.first
-            type_and_modifiers = input.first.last
-            parse_from_string_parts(output, op_and_name, type_and_modifiers)
-          else
-            raise ParseError, "can't parse #{input.inspect} (no name and more than one key)"
-          end
-          output
+          dbg "parsing from hash"
+          raise ParseError, "can't parse #{input.inspect} (more than one key)" if input.length > 1
+          op_and_name, type_and_modifiers = *input.first
+          parse_from_string_parts(output, op_and_name, type_and_modifiers)
         end
 
-        puts "returning output: #{output}"
+        dbg "returning output: #{output}"
         output
       end
 
       def parse_from_string_parts(output, op_and_name, rest = nil)
-        puts "parse_from_string_parts op_and_name: #{op_and_name.inspect} rest: #{rest.inspect}"
-        s = StringScanner.new(op_and_name)
-        ops, output.name, output.namespace = parse_ops_and_name(s)
-        output.kind, output.type = normalize_ops(ops)
-        puts "after normalize_ops output.type: #{output.type.inspect}"
-        s = s.eos? ? StringScanner.new(rest || "") : s
+        dbg "parse_from_string_parts op_and_name: #{op_and_name.inspect} rest: #{rest.inspect}"
+        scanner = parse_ops_and_name(StringScanner.new(op_and_name), rest, output)
 
-        if output.rename?
-          output.new_namespace, output.new_name = scan_namespace_and_name(s)
-        end
+        handle_rename(scanner, output)
 
-        puts "output.name: #{output.name.inspect}"
-        puts "output.namespace: #{output.namespace.inspect}"
-        puts "output.kind: #{output.kind.inspect}"
-        puts "s.rest: #{s.rest.inspect}"
-        if output.namespace && !output.namespace_allowed?
-          raise ParseError, "can't use a namespace for `#{output.kind}` in `#{input.inspect}`"
-        end
+        raise InvalidNamespaceError.new(input, output) if output.invalid_namespace?
 
-        type_and_modifiers = s.rest
+        type_and_modifiers = scanner.rest
 
         type, normalized_type, modifiers = parse_type(type_and_modifiers)
 
-        puts "type: #{type.inspect} normalized_type: #{normalized_type.inspect} modifiers: #{modifiers.inspect}"
-        puts "output.accepts_type?: #{output.accepts_type?.inspect}"
+        dbg "type: #{type.inspect} normalized_type: #{normalized_type.inspect} modifiers: #{modifiers.inspect}"
+        dbg "output.accepts_type?: #{output.accepts_type?.inspect}"
         if output.accepts_type?
           if type.blank?
             output.type ||= :string if output.accepts_default_type?
@@ -85,9 +71,9 @@ module Skellie
           raise ParseError, "can't apply type to `#{output.kind}` in `#{input.inspect}`"
         end
 
-        puts "modifiers.blank?: #{modifiers.blank?.inspect}"
+        dbg "modifiers.blank?: #{modifiers.blank?.inspect}"
         if modifiers.blank?
-          puts "output.reference?: #{output.reference?.inspect}"
+          dbg "output.reference?: #{output.reference?.inspect}"
           if output.reference?
             output.to = output.name
           end
@@ -102,15 +88,17 @@ module Skellie
         end
       end
 
-      def parse_ops_and_name(s)
-        ops = scan_pre_ops(s)
-        namespace, name = scan_namespace_and_name(s)
-        ops += scan_post_ops(s)
-        [ops, name, namespace]
+      def parse_ops_and_name(scanner, rest, output)
+        ops = scan_pre_ops(scanner)
+        output.set_namespace_and_name(scan_namespace_and_name(scanner))
+        ops += scan_post_ops(scanner)
+        output.kind, output.type = normalize_ops(ops)
+        dbg "after normalize_ops output.type: #{output.type.inspect}"
+        scanner.eos? ? StringScanner.new(rest || "") : scanner
       end
 
       def normalize_ops(ops)
-        puts "ops: #{ops.inspect}"
+        dbg "ops: #{ops.inspect}"
         case ops.sort.uniq
         when %w[+]
           :add_association
@@ -132,7 +120,7 @@ module Skellie
       end
 
       def parse_type(type_and_modifiers)
-        puts "parse_type type_and_modifiers: #{type_and_modifiers.inspect}"
+        dbg "parse_type type_and_modifiers: #{type_and_modifiers.inspect}"
         case type_and_modifiers
         when Empty
           [nil, nil, nil]
@@ -150,7 +138,7 @@ module Skellie
           end
 
           # output.type
-          # puts "  output.type: #{output.type.inspect}"
+          # dbg "  output.type: #{output.type.inspect}"
           # if output.kind == :rename_column
           #   if output.new_name.blank?
           #     output.new_name = parts.shift
@@ -180,7 +168,7 @@ module Skellie
       end
 
       def scan_namespace_and_name(s)
-        puts "scan_namespace_and_name s: #{s.inspect}"
+        dbg "scan_namespace_and_name s: #{s.inspect}"
         s.scan(
           %r{
             (?<namespace>\w+(?=/))?
@@ -189,14 +177,13 @@ module Skellie
             :?
           }x
         )
-        ap s
         [s[:namespace], s[:name]]
       end
 
       def parse_type_modifiers_array(modifiers, output)
-        puts "parse_type_modifiers_array modifiers: #{modifiers.inspect}"
+        dbg "parse_type_modifiers_array modifiers: #{modifiers.inspect}"
         pending_ref = output.reference?
-        puts "pending_ref: #{pending_ref.inspect}"
+        dbg "pending_ref: #{pending_ref.inspect}"
         while modifiers && modifiers.length > 0
           modifier = modifiers.shift
           normalized_modifier = normalize_type_modifier(modifier)
@@ -283,6 +270,18 @@ module Skellie
         }
 
         modifier_alias&.first&.to_sym
+      end
+
+      def handle_rename(scanner, output)
+        output.set_new_namespace_and_name(scan_namespace_and_name(scanner)) if output.rename?
+        dbg "output.name: #{output.name.inspect}"
+        dbg "output.namespace: #{output.namespace.inspect}"
+        dbg "output.kind: #{output.kind.inspect}"
+        dbg "scanner.rest: #{scanner.rest.inspect}"
+      end
+
+      def dbg(msg)
+        puts msg if debug
       end
     end
   end

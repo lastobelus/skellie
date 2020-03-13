@@ -2,6 +2,8 @@ require "attr_extras"
 
 module Skellie
   module Sketch
+    # holds the settings for a parsed model attribute. Used by the generator
+    # to generate the necessary model, migration, git operations.
     class Attribute
       aattr_initialize [
         :name, :namespace,
@@ -45,6 +47,20 @@ module Skellie
         else
           val
         end
+      end
+
+      def set_namespace_and_name(args)
+        self.namespace = args.first
+        self.name = args.last
+      end
+
+      def set_new_namespace_and_name(args)
+        self.new_namespace = args.first
+        self.new_name = args.last
+      end
+
+      def invalid_namespace?
+        namespace && !namespace_allowed?
       end
     end
   end

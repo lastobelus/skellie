@@ -1,4 +1,5 @@
 require "skellie/parser/attribute"
+require "skellie/parser/parse_error"
 require "byebug"
 
 PARSED_ATTRIBUTE_DEFAULTS = {
@@ -24,7 +25,7 @@ def parse!(input, output)
     it "raises ParseError for `#{yaml}`" do
       expect {
         parser.parse
-      }.to raise_error(Skellie::Parser::Attribute::ParseError, output)
+      }.to raise_error(Skellie::Parser::ParseError, output)
     end
   else
     raise "expected output is #{output.class.name} but should be Hash for success or regex for ParseError"
